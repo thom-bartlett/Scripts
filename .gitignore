@@ -1,0 +1,10 @@
+# PyCache files
+__pycache__
+
+# Files with credentials
+Jamf-Laps-2.0.sh
+lastpass.py
+snipe_name.sh
+token.json
+local_credentials.py
+credentials.json
