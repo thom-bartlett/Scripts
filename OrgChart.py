@@ -13,8 +13,8 @@ headers = {
 def getDirectReport(manager, CSV):
     directceoReports = []
     for row in CSV:
-        if row[19] == manager:
-            directceoReports.append({row[0]: [row[4],row[5],row[17]]})
+        if row[5] == manager:
+            directceoReports.append({row[0]: [row[1],row[3],row[2],row[5]]})
     return directceoReports
 
 def createConnector(start, end, startSnap, endSnap):
@@ -39,6 +39,11 @@ def createShape(name, x, y, type):
         height = "250"
         width = "250"
         color = "#E6E6E6"
+    elif type == "associate vp":
+        shape = "round_rectangle"
+        height = "200"
+        width = "200"
+        color = "#FFFFFF"
     elif type == "director":
         shape = "round_rectangle"
         height = "200"
@@ -148,18 +153,32 @@ def recursion(reports, CSV, x, z=0, y=0, startID=0):
         key = list(i.keys())[0]
         reports = getDirectReport(key, CSV)
         groupLength = len(reports)
-        text = i[key][0] + " " + i[key][1] + " " + i[key][2]
+        text = i[key][0] + " " + i[key][1]
+        if i[key][3] == "vharris@venturewell.org":
+            y+=200
         if z == 0:
             execLocation = ((groupLength * 250) / 2) + x - 125
             #print (f"execLocation = {execLocation}")
             endID = createShape(text, execLocation, y, "executive")
             createConnector(startID, endID, "bottom", "top")
         elif z == 1:
-            endID = createShape(text, x, y, "director")
+            if i[key][2] == "director":
+                endID = createShape(text, x, y, "director")
+            elif i[key][2] == "associate vp":
+                y-=200
+                endID = createShape(text, x, y-50, "director")
+            else:
+                y+=200
+                endID = createShape(text, x, y, "staff")
+            
             createConnector(startID, endID, "bottom", "top")
         elif z == 2:
-            endID = createShape(text, x, y, "staff")
-            createConnector(startID, endID, "left", "left")
+            if i[key][2] == "director":
+                endID = createShape(text, x, y, "director")
+                createConnector(startID, endID, "bottom", "top")
+            else:
+                endID = createShape(text, x, y, "staff")
+                createConnector(startID, endID, "left", "left")
         elif z == 3:
             endID = createShape(text, x+25, y, "nested")
             createConnector(startID, endID, "left", "left")

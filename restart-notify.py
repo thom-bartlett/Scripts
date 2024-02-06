@@ -17,6 +17,7 @@ class DialogAlert:
             "messagefont": "size=16",
             "title": "none",
             "moveable": 1,
+            "timer": "900",
             "ontop": 0
         }
 
@@ -63,7 +64,7 @@ def main():
     else:
         uptime = 0
         print(uptime)
-    if int(uptime) < 20:
+    if int(uptime) < 3:
         pass
         print("Uptime less than 20")
     else:
