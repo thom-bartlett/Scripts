@@ -183,6 +183,35 @@ if [[ -z "${title}" ]] || [[ -z "${message}" ]]; then
 
     # Create a newline-separated string for the dropdown list
     dropdownList=$(find /Applications -name "*.app" -maxdepth 4 | awk '{gsub("/Applications/", ""); printf "%s, ", $0}' | sed 's/, $//')
+    #!/bin/bash
+
+    # The input string
+    app_string="Adobe Acrobat Reader.app, Adobe Acrobat Reader.app/Contents/Frameworks/RdrCEF Helper (Renderer).app, Adobe Acrobat Reader.app/Contents/Frameworks/RdrCEF Helper (GPU).app"
+
+    # Split the string into an array using comma as delimiter
+    IFS=', ' read -r -a app_array <<< "$app_string"
+
+    # Initialize an empty string to hold the final JSON-like output
+    json_output="["
+
+    # Loop through each app in the array
+    for app in "${app_array[@]}"
+    do
+        # Trim leading and trailing whitespace from the app name
+        trimmed_app=$(echo $app | xargs)
+        # Append the formatted dictionary entry to json_output
+        # Check if json_output is longer than 1 to avoid leading comma
+        if [ ${#json_output} -gt 1 ]; then
+            json_output+=", "
+        fi
+        json_output+="{\"label\": \"$trimmed_app\"}"
+    done
+
+    # Close the JSON-like array
+    json_output+="]"
+
+    # Output the JSON-like array
+    echo "$json_output"
 
     extraflags="--width 700 --height 350 --moveable --titlefont size=26 --messagefont size=13 --iconsize 300"
 
@@ -199,7 +228,7 @@ if [[ -z "${title}" ]] || [[ -z "${message}" ]]; then
     button2text="Cancel"
 
     dropdownOption1="--selecttitle"
-    dropdownTitle="Apps"
+    dropdownTitle="Remove App"
 
     dropdownOption2="--selectvalues"
     dropdownValue="$dropdownList"
@@ -236,6 +265,11 @@ command=$(${dialogBinary} \
     --commandfile "$dialogMessageLog}" \
     ${dropdownOption1} "${dropdownTitle}" \
     ${dropdownOption2} "${dropdownValue}" \
+    ${dropdownOption1} "${dropdownTitle}" \
+    ${dropdownOption2} "${dropdownValue}" \
+    ${dropdownOption1} "${dropdownTitle}" \
+    ${dropdownOption2} "${dropdownValue}" \
+
     ${extraflags})
 
 returncode=$?
