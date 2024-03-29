@@ -16,6 +16,8 @@
 #
 ####################################################################################################
 
+ newtest=(--checkbox "Firefox" --checkbox "Microsoft Edge" --checkbox "Google Chrome" --checkbox "Adobe Photoshop" --checkbox "Some Other Stuff" --checkbox "Some More Stuff")
+
 scriptVersion="0.0.10"
 scriptLog="/var/tmp/org.wpromote.log"
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
@@ -183,16 +185,12 @@ if [[ -z "${title}" ]] || [[ -z "${message}" ]]; then
 
     # Create a newline-separated string for the dropdown list
     dropdownList=$(find /Applications -name "*.app" -maxdepth 4 | awk '{gsub("/Applications/", ""); printf "%s, ", $0}' | sed 's/, $//')
-    #!/bin/bash
-
-    # The input string
-    app_string="Adobe Acrobat Reader.app, Adobe Acrobat Reader.app/Contents/Frameworks/RdrCEF Helper (Renderer).app, Adobe Acrobat Reader.app/Contents/Frameworks/RdrCEF Helper (GPU).app"
 
     # Split the string into an array using comma as delimiter
-    IFS=', ' read -r -a app_array <<< "$app_string"
+    IFS=', ' read -r -a app_array <<< "$dropdownList"
 
     # Initialize an empty string to hold the final JSON-like output
-    json_output="["
+    json_output=()
 
     # Loop through each app in the array
     for app in "${app_array[@]}"
@@ -201,17 +199,14 @@ if [[ -z "${title}" ]] || [[ -z "${message}" ]]; then
         trimmed_app=$(echo $app | xargs)
         # Append the formatted dictionary entry to json_output
         # Check if json_output is longer than 1 to avoid leading comma
-        if [ ${#json_output} -gt 1 ]; then
-            json_output+=", "
-        fi
-        json_output+="{\"label\": \"$trimmed_app\"}"
+        # if [ ${#json_output} -gt 1 ]; then
+        #     json_output+=(",")
+        # fi
+        json_output+=("--checkbox \"$trimmed_app\"")
     done
 
-    # Close the JSON-like array
-    json_output+="]"
-
     # Output the JSON-like array
-    echo "$json_output"
+    echo "${json_output[@]}"
 
     extraflags="--width 700 --height 350 --moveable --titlefont size=26 --messagefont size=13 --iconsize 300"
 
@@ -227,8 +222,8 @@ if [[ -z "${title}" ]] || [[ -z "${message}" ]]; then
     button2option="--button2text"
     button2text="Cancel"
 
-    dropdownOption1="--selecttitle"
-    dropdownTitle="Remove App"
+    dropdownOption1="--checkbox"
+    dropdownTitle="Apps"
 
     dropdownOption2="--selectvalues"
     dropdownValue="$dropdownList"
@@ -260,16 +255,12 @@ command=$(${dialogBinary} \
     ${button1option} "${button1text}" \
     ${button2option} "${button2text}" \
     ${infobuttonoption} "${infobuttontext}" \
+    --big \
     --infobuttonaction "https://servicenow.company.com/support?id=kb_article_view&sysparm_article=${infobuttontext}" \
     --messagefont "size=14" \
     --commandfile "$dialogMessageLog}" \
-    ${dropdownOption1} "${dropdownTitle}" \
-    ${dropdownOption2} "${dropdownValue}" \
-    ${dropdownOption1} "${dropdownTitle}" \
-    ${dropdownOption2} "${dropdownValue}" \
-    ${dropdownOption1} "${dropdownTitle}" \
-    ${dropdownOption2} "${dropdownValue}" \
-
+    --checkboxstyle switch \
+    --json --checkbox "Adobe" --checkbox "Acrobat" --checkbox "Reader.app" --checkbox "Adobe" --checkbox "Acrobat" --checkbox "Reader.app/Contents/Frameworks/RdrCEF" --checkbox "Helper" --checkbox "(Renderer).app" --checkbox "Adobe" --checkbox "Acrobat" --checkbox "Reader.app/Contents/Frameworks/RdrCEF" --checkbox "Helper" --checkbox "(GPU).app" --checkbox "Adobe" --checkbox "Acrobat" --checkbox "Reader.app/Contents/Frameworks/RdrCEF" \
     ${extraflags})
 
 returncode=$?
