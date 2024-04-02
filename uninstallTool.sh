@@ -16,8 +16,6 @@
 #
 ####################################################################################################
 
- newtest=(--checkbox "Firefox" --checkbox "Microsoft Edge" --checkbox "Google Chrome" --checkbox "Adobe Photoshop" --checkbox "Some Other Stuff" --checkbox "Some More Stuff")
-
 scriptVersion="0.0.10"
 scriptLog="/var/tmp/org.wpromote.log"
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
@@ -81,63 +79,6 @@ else
     exit 1
 fi
 
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Pre-flight Check: Validate / install swiftDialog (Thanks big bunches, @acodega!)
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-# deprecated
-function dialogCheck() {
-
-    # Get the URL of the latest PKG From the Dialog GitHub repo
-    dialogURL=$(curl -L --silent --fail "https://api.github.com/repos/swiftDialog/swiftDialog/releases/latest" | awk -F '"' "/browser_download_url/ && /pkg\"/ { print \$4; exit }")
-
-    # Expected Team ID of the downloaded PKG
-    expectedDialogTeamID="PWA5E9TQ59"
-
-    # Check for Dialog and install if not found
-    if [ ! -e "/Library/Application Support/Dialog/Dialog.app" ]; then
-
-        updateScriptLog "PRE-FLIGHT CHECK: Dialog not found. Installing..."
-
-        # Create temporary working directory
-        workDirectory=$( /usr/bin/basename "$0" )
-        tempDirectory=$( /usr/bin/mktemp -d "/private/tmp/$workDirectory.XXXXXX" )
-
-        # Download the installer package
-        /usr/bin/curl --location --silent "$dialogURL" -o "$tempDirectory/Dialog.pkg"
-
-        # Verify the download
-        teamID=$(/usr/sbin/spctl -a -vv -t install "$tempDirectory/Dialog.pkg" 2>&1 | awk '/origin=/ {print $NF }' | tr -d '()')
-
-        # Install the package if Team ID validates
-        if [[ "$expectedDialogTeamID" == "$teamID" ]]; then
-
-            /usr/sbin/installer -pkg "$tempDirectory/Dialog.pkg" -target /
-            sleep 2
-            dialogVersion=$( /usr/local/bin/dialog --version )
-            updateScriptLog "PRE-FLIGHT CHECK: swiftDialog version ${dialogVersion} installed; proceeding..."
-
-        else
-
-            # Display a so-called "simple" dialog if Team ID fails to validate
-            osascript -e 'display dialog "Please advise your Support Representative of the following error:\r\r• Dialog Team ID verification failed\r\r" with title "Display Message via Dialog: Error" buttons {"Close"} with icon caution'
-            quitScript "1"
-
-        fi
-
-        # Remove the temporary working directory when done
-        /bin/rm -Rf "$tempDirectory"
-
-    else
-
-        updateScriptLog "PRE-FLIGHT CHECK: swiftDialog version $(${dialogBinary} --version) found; proceeding..."
-
-    fi
-
-}
-
 # Ensure we have latest version. Installomator is packaged with this tool.
 updateScriptLog "Updating swiftdialog"
 /usr/local/Installomator/Installomator.sh swiftdialog
@@ -177,71 +118,61 @@ function quitScript() {
 #
 ####################################################################################################
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Validate Script Parameters
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Create a newline-separated string for the dropdown list
+dropdownList=$(find /Applications -name "*.app" -maxdepth 3 | awk '{gsub("/Applications/", ""); printf "--checkbox '\''%s'\'' ", $0}')
+echo "$dropdownList"
 
-if [[ -z "${title}" ]] || [[ -z "${message}" ]]; then
+# Split the string into an array using comma as delimiter
+#IFS=', ' read -r -a app_array <<< "$dropdownList"
+#echo "${app_array[@]}"
 
-    # Create a newline-separated string for the dropdown list
-    dropdownList=$(find /Applications -name "*.app" -maxdepth 4 | awk '{gsub("/Applications/", ""); printf "%s, ", $0}' | sed 's/, $//')
+# Initialize an empty string to hold the final JSON-like output
+#json_output=()
 
-    # Split the string into an array using comma as delimiter
-    IFS=', ' read -r -a app_array <<< "$dropdownList"
+# Loop through each app in the array
+#for app in "${app_array[@]}"
+#do
+    # Trim leading and trailing whitespace from the app name
+    #trimmed_app=$(echo "$app" | xargs)
+ #   echo "$app"
+ #   json_output+=("--checkbox \"$app\"")
+#done
 
-    # Initialize an empty string to hold the final JSON-like output
-    json_output=()
+# Output the JSON-like array
+#echo "${json_output[@]}"
 
-    # Loop through each app in the array
-    for app in "${app_array[@]}"
-    do
-        # Trim leading and trailing whitespace from the app name
-        trimmed_app=$(echo $app | xargs)
-        # Append the formatted dictionary entry to json_output
-        # Check if json_output is longer than 1 to avoid leading comma
-        # if [ ${#json_output} -gt 1 ]; then
-        #     json_output+=(",")
-        # fi
-        json_output+=("--checkbox \"$trimmed_app\"")
-    done
+# extra commands for display
+extraflags="--width 700 --height 350 --moveable --titlefont size=26 --messagefont size=13 --iconsize 300"
 
-    # Output the JSON-like array
-    echo "${json_output[@]}"
+titleoption="--title"
+title="App Removal Tool"
 
-    extraflags="--width 700 --height 350 --moveable --titlefont size=26 --messagefont size=13 --iconsize 300"
+messageoption="--message"
+message="### This will delete an app from your Applications folder. \n\n It may not support apps with complex uninstallations such as Cisco AnyConnect or Crowdstrike."
 
-    titleoption="--title"
-    title="App Removal Tool"
+button1option="--button1text"
+button1text="Remove"
 
-    messageoption="--message"
-    message="### This will delete an app from your Applications folder. \n\n It may not support apps with complex uninstallations such as Cisco AnyConnect or Crowdstrike."
+button2option="--button2text"
+button2text="Cancel"
 
-    button1option="--button1text"
-    button1text="Remove"
-
-    button2option="--button2text"
-    button2text="Cancel"
-
-    dropdownOption1="--checkbox"
-    dropdownTitle="Apps"
-
-    dropdownOption2="--selectvalues"
-    dropdownValue="$dropdownList"
-
-    iconoption="--icon"
-    icon="https://github.com/unfo33/Public-scripts/blob/main/Wpromote_Logomark.png?raw=true"
-
-else
-
-    updateScriptLog "Both \"title\" and \"message\" Parameters are populated; proceeding ..."
-
-fi
-
-
+iconoption="--icon"
+icon="https://github.com/unfo33/Public-scripts/blob/main/Wpromote_Logomark.png?raw=true"
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Display Message: Dialog
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+test='{
+  "checkbox" : [
+	  {"label" : "Option 1", "checked" : true, "disabled" : true },
+	  {"label" : "Option 2", "checked" : true },
+	  {"label" : "Option 3", "checked" : false },
+	  {"label" : "Option 4", "checked" : true, "disabled" : true },
+	  {"label" : "Option 5", "checked" : false },
+	  {"label" : "Option 6", "checked" : true }
+	]
+}'
 
 updateScriptLog "Title: ${title}"
 updateScriptLog "Message: ${message}"
@@ -260,7 +191,7 @@ command=$(${dialogBinary} \
     --messagefont "size=14" \
     --commandfile "$dialogMessageLog}" \
     --checkboxstyle switch \
-    --json --checkbox "Adobe" --checkbox "Acrobat" --checkbox "Reader.app" --checkbox "Adobe" --checkbox "Acrobat" --checkbox "Reader.app/Contents/Frameworks/RdrCEF" --checkbox "Helper" --checkbox "(Renderer).app" --checkbox "Adobe" --checkbox "Acrobat" --checkbox "Reader.app/Contents/Frameworks/RdrCEF" --checkbox "Helper" --checkbox "(GPU).app" --checkbox "Adobe" --checkbox "Acrobat" --checkbox "Reader.app/Contents/Frameworks/RdrCEF" \
+    --jsonstring "$test" \
     ${extraflags})
 
 returncode=$?
