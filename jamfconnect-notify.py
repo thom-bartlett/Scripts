@@ -21,6 +21,7 @@ class DialogAlert:
             "title": "none",
             "button2text": "Defer",
             "moveable": 1,
+            "timer": "900",
             "ontop": 0
         }
 

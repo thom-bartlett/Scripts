@@ -17,7 +17,7 @@ def getAirtableData():
         "authorization": f"Bearer {token}"
     }
     query = {"sort[0][field]": "Email", "cellFormat": "string", "timeZone": "UTC", "userLocale": "en-US",
-        "fields": ['Email', 'Okta ID', 'Okta Status', 'First Name', 'Last Name', 'Honorific Prefix', 'Honorific Suffix', 'Secondary Email', 'Mobile Phone', 'Primary Phone', 'State', 'Division', 'Manager', 'Pronoun', 'Role', 'Time Zone', 'Title', 'Department', 'Manager Email', 'Start Date', 'Legal First Name', 'Legal Last Name', 'Sub-Department', 'Employment Type'] }
+        "fields": ['Email', 'Okta ID', 'Okta Status', 'First Name', 'Last Name', 'Honorific Prefix', 'Honorific Suffix', 'Secondary Email', 'Mobile Phone', 'Primary Phone', 'State', 'Division', 'Manager', 'Pronoun', 'Role', 'Time Zone', 'Title', 'Department', 'Manager Email', 'Legal First Name', 'Legal Last Name', 'Sub-Department', 'Employment Type'] }
     URL = "https://api.airtable.com/v0/appePY1dmnFMHaCY4/tblRs1J0Th1R43jmB"
     responseRaw = requests.get(URL, params=query, headers=headers)
     #print(responseRaw.text)
@@ -41,6 +41,7 @@ async def getOktaData():
     okta_client = OktaClient(config)
     # Actually call to Okta
     users, resp, err = await okta_client.list_users()
+    print (resp, err)
     return users
 
 async def updateOkta(attributeKey, userChanges):
@@ -129,7 +130,7 @@ def csvCompare(argument):
         userChanges = []
         for i in diff["changed"]:
             userChanges.append(i["key"])
-        updateKey = ["email", "Okta ID", "Okta Status", "firstName", "lastName", "honorificPrefix", "honorificSuffix", "secondEmail", "mobilePhone", "primaryPhone", "state", "division", "manager", "pronoun", 'role', 'time_zone', 'vwtitle', 'custom_department', 'manageremail', 'startdate', 'legalfirst', 'legallast', 'Subdepartment', 'employment']
+        updateKey = ["email", "Okta ID", "Okta Status", "firstName", "lastName", "honorificPrefix", "honorificSuffix", "secondEmail", "mobilePhone", "primaryPhone", "state", "division", "manager", "pronoun", 'role', 'time_zone', 'vwtitle', 'department', 'manageremail', 'legalfirst', 'legallast', 'Subdepartment', 'employment']
         loop = asyncio.get_event_loop()
         loop.run_until_complete(updateOkta(updateKey, userChanges))
     else:
@@ -141,8 +142,8 @@ def main():
         argument = sys.argv[1]
         csvCompare(argument)
     else:
-        attributeKey = ["login", "Okta ID", "Okta Status", "firstName", "lastName", "honorificPrefix", "honorificSuffix", "secondEmail", "mobilePhone", "primaryPhone", "state", "division", "manager", "pronoun", 'role', 'time_zone', 'vwtitle', 'custom_department', 'manageremail', 'startdate', 'legalfirst', 'legallast', 'Subdepartment', 'employment']
-        headers = ['Email', "Okta ID", "Okta Status", 'First Name', 'Last Name', 'Honorific Prefix', 'Honorific Suffix', 'Secondary Email', 'Mobile Phone', 'Primary Phone', 'State', 'Division', 'Manager', 'Pronoun', 'Role', 'Time Zone', 'Title', 'Department', 'Manager Email', 'Start Date', 'Legal First Name', 'Legal Last Name', 'Sub-Department', 'Employment Type']
+        attributeKey = ["login", "Okta ID", "Okta Status", "firstName", "lastName", "honorificPrefix", "honorificSuffix", "secondEmail", "mobilePhone", "primaryPhone", "state", "division", "manager", "pronoun", 'role', 'time_zone', 'vwtitle', 'department', 'manageremail', 'legalfirst', 'legallast', 'Subdepartment', 'employment']
+        headers = ['Email', "Okta ID", "Okta Status", 'First Name', 'Last Name', 'Honorific Prefix', 'Honorific Suffix', 'Secondary Email', 'Mobile Phone', 'Primary Phone', 'State', 'Division', 'Manager', 'Pronoun', 'Role', 'Time Zone', 'Title', 'Department', 'Manager Email', 'Legal First Name', 'Legal Last Name', 'Sub-Department', 'Employment Type']
         # get data and create Okta CSV
         loop = asyncio.get_event_loop()
         oktaData = loop.run_until_complete(getOktaData())

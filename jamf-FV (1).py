@@ -3,7 +3,6 @@ import requests
 from local_credentials import jamf_user, jamf_password, jamf_hostname
 import csv
 import json
-import datetime
 
 def get_uapi_token():
     jamf_test_url = jamf_hostname + "/api/v1/auth/token"
@@ -50,28 +49,16 @@ def computer_check(token, serial):
     else:
         return False
 
-def getComputers(token):
-    url = jamf_hostname + "/JSSResource/computers"
-    headers = {'Accept': 'application/json', 'Authorization': 'Bearer ' + token}
-    response = requests.request("GET", url, headers=headers)
-    return response
-
-def getAppData(token, computers):
-    headers = {'Accept': 'application/json', 'Authorization': 'Bearer ' + token}
-    days = 90
-    start_date = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
-    end_date = datetime.datetime.now().strftime("%Y-%m-%d")
-    totalUsage = {}
-    for i in computers:
-        id = i["computer"]["id"]
-        url = jamf_hostname + f"/JSSResource/computerapplicationusage/id/{id}/{start_date}_{end_date}"
-        response = requests.request("GET", url, headers=headers)
-        totalUsage.update({"ID": id, "usage": response[0]["usage"]["apps"]})
-    print (totalUsage)
-
 def main():
     token = get_uapi_token()
-    computers = getComputers(token)
-    usage = getAppData(token, computers)
+    with open('Addigy-Device-Dump-VentureWell2.0.csv', newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            serial = row[0]
+            fv = row[1]
+            if computer_check(token, serial):
+                jamf_Update(token, fv, serial)
+            else:
+                continue
 
 main()
