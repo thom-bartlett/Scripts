@@ -15,7 +15,6 @@ dialogCMD=$("$dialogApp" -p --title "$title" \
 --icon "$icon" \
 --message "$message" \
 --textfield "Username" \
---blurscreen \
 --ontop \
 --textfield "Password",secure)
 
