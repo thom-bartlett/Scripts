@@ -26,10 +26,6 @@ adminPassword=$(generate_password)
 # Create the new admin user
 sudo sysadminctl -addUser IncyteITSupport -fullName "IT Support" -password "$adminPassword" -admin
 
-# Create the new user
-# sudo sysadminctl -addUser "$username" -password "$password" -admin
-
-
 # Output the generated password
 echo "The password for IncyteITSupport is: $adminPassword"
 
