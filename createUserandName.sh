@@ -1,26 +1,7 @@
 #!/bin/bash
-dialogApp="/usr/local/bin/dialog"
 
-title="Gathering Information..."
-message="Please enter the primary username and password to generate computer name and create accounts."
-
-hwType=$(/usr/sbin/system_profiler SPHardwareDataType | grep "Model Identifier" | grep "Book")  
-if [ "$hwType" != "" ]; then
-  icon="SF=laptopcomputer"
-  else
-  icon="SF=desktopcomputer"
-fi
-
-dialogCMD=$("$dialogApp" -p --title "$title" \
---icon "$icon" \
---message "$message" \
---textfield "Username" \
---ontop \
---textfield "Password",secure)
-
-# Parse the output of our Dialog command to get the label and any configured options
-username=$(echo "${dialogCMD}" | grep 'Username : ' | awk -F ' : ' '{print $NF}')
-password=$(echo "${dialogCMD}"  | grep 'Password : ' | awk -F ' : ' '{print $NF}')
+# get current user
+username=$( scutil <<< "show State:/Users/ConsoleUser" | awk '/Name :/ && ! /loginwindow/ { print $3 }' )
 
 # Function to generate a random password
 generate_password() {
@@ -46,7 +27,7 @@ adminPassword=$(generate_password)
 sudo sysadminctl -addUser IncyteITSupport -fullName "IT Support" -password "$adminPassword" -admin
 
 # Create the new user
-sudo sysadminctl -addUser "$username" -password "$password" -admin
+# sudo sysadminctl -addUser "$username" -password "$password" -admin
 
 
 # Output the generated password
